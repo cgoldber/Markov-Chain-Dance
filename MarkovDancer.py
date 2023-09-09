@@ -1,19 +1,47 @@
 import cv2
 import numpy as np
 import glob
+from moviepy.editor import VideoFileClip, clips_array
+import pandas as pd
+import datetime
+import os
 
-IMG_LEN = 2
-NUM_MOVES = 10
-STARTING_MOVE = "B"
+
+NUM_MOVES = 20
+
+class RetrieveProbabilities:
+    def __init__(self):
+        print("Retrieving Transition and Prior Probabilities")
+    
+    def retrieve_trans_mat(self):
+        """Reads excel sheet that records the probability that each dance move will come next preconditioned on the current dance move.
+        """
+        return pd.read_excel("CC Dance.xlsx", sheet_name = "Normalized Matrix", index_col=0, header=0)
+        
+    def retrieve_priors(self):
+        """Reads excel sheet that records the probability that each dance move will come first in the sequence.
+        """
+        return pd.read_excel("CC Dance.xlsx", sheet_name = "Normalized Prior", index_col=0, header=0)
+
 
 class MarkovDancer:
-    def __init__(self, transition_matrix):
+    def __init__(self, transition_matrix, priors):
         """Simulates a dancer that relies on a simple Markov chain to choose next dance move.
-           Args:
-                transition_matrix (dict): transition probabilities
+        Args:
+               transition matrix (dict): the probabilities of transitioning from each move to every other move
         """
         self.transition_matrix = transition_matrix
-        self.moves = list(transition_matrix.keys())
+        self.priors = priors
+        self.moves = list(transition_matrix.columns)
+    
+    def get_first_move(self):
+        """Decides first move of sequence based on priors.
+        """
+        print(self.priors)
+        return np.random.choice(
+            self.moves,
+            p=[self.priors.loc[move]["Probability"] for move in self.moves]
+        )
 
     def get_next_move(self, current_move):
         """Decides which move to choose next based on the current move.
@@ -22,17 +50,18 @@ class MarkovDancer:
         """
         return np.random.choice(
             self.moves,
-            p=[self.transition_matrix[current_move][next_move] \
+            p=[self.transition_matrix.loc[current_move][next_move] \
             for next_move in self.moves]
         )
 
-    def compose_dance(self, current_move="A", num_moves=5):
+    def compose_dance(self, num_moves=5):
         """Generates a sequence of notes.
            Args:
                 current_move (str): the dance move that is currently being displayed.
 
                 song_length (int): how many dance moves we should generate for the dance.
         """
+        current_move = self.get_first_move()
         dance = [current_move]
         while len(dance) < num_moves:
             next_move = self.get_next_move(current_move)
@@ -41,55 +70,27 @@ class MarkovDancer:
 
         return dance
 
-    def get_move_images(self, dance, max_width, max_height):
-        img_array = []
-        path = 'dancePics/dance'
-        for move in dance:
-            img = cv2.imread(path + move + ".jpg") #prob gonna only wanna get each image once
-
-            # Calculate the padding needed to reach the maximum dimensions
-            top_pad = (max_height - img.shape[0]) // 2
-            bottom_pad = max_height - img.shape[0] - top_pad
-            left_pad = (max_width - img.shape[1]) // 2
-            right_pad = max_width - img.shape[1] - left_pad
-
-            padded_img = cv2.copyMakeBorder(img, top_pad, bottom_pad, left_pad, right_pad, cv2.BORDER_CONSTANT, value=(255, 255, 255))
-            img_array.append(padded_img)
-        return img_array
-
     def write_dance_video_file(self, dance):
         """Write out a collection of dance move images (i.e, a dance!) to a file.
            Args:
                dance (list): moves in the dance
         """
-        # get maximum dimensions
-        max_width = 0
-        max_height = 0
-        for filename in glob.glob('dancePics/*.jpg'):
-            img = cv2.imread(filename)
-            height, width, layers = img.shape
-            if width > max_width:
-                max_width = width
-            if height > max_height:
-                max_height = height
+        vid_array = []
+        path = 'danceVids/'
 
-        img_array = self.get_move_images(dance, max_width, max_height)
+        video_clips = [VideoFileClip('Move Videos/' + move + ".mov") for move in dance]
+        final_clip = clips_array([[clip] for clip in video_clips])
+        final_clip.write_videofile("Final Vids/", codec="libx264", fps=24)
         
-        out = cv2.VideoWriter('vids/markovDancer.avi',cv2.VideoWriter_fourcc(*'XVID'), IMG_LEN, (max_width, max_height))
-        
-        for img in img_array:
-            out.write(img)
-        out.release()
-
 
 def main():
-    dance_maker = MarkovDancer({
-        "A": {"A": 0.3, "B": 0.4, "C": 0.3},
-        "B": {"A": 0.7, "B": 0.2, "C": 0.1},
-        "C": {"A": 0.1, "B": 0.7, "C": 0.2}
-    })
-    new_dance = dance_maker.compose_dance(current_move=STARTING_MOVE, num_moves=NUM_MOVES)
+    #os.environ["IMAGEIO_FFMPEG_EXE"] = "FFMPEG Download/ffmpeg-6.0"
+    prob_retriever = RetrieveProbabilities()
+    transition_matrix = prob_retriever.retrieve_trans_mat()
+    priors = prob_retriever.retrieve_priors()
 
+    dance_maker = MarkovDancer(transition_matrix, priors)
+    new_dance = dance_maker.compose_dance(num_moves=NUM_MOVES)
 
     print("Here's my latest dance:", new_dance)
     print("Writing dance to file...")
