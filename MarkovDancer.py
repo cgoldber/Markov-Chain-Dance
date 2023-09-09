@@ -37,7 +37,6 @@ class MarkovDancer:
     def get_first_move(self):
         """Decides first move of sequence based on priors.
         """
-        print(self.priors)
         return np.random.choice(
             self.moves,
             p=[self.priors.loc[move]["Probability"] for move in self.moves]
@@ -75,12 +74,10 @@ class MarkovDancer:
            Args:
                dance (list): moves in the dance
         """
-        vid_array = []
-        path = 'danceVids/'
-
         video_clips = [VideoFileClip('Move Videos/' + move + ".mov") for move in dance]
         final_clip = clips_array([[clip] for clip in video_clips])
-        final_clip.write_videofile("Final Vids/", codec="libx264", fps=24)
+        final_clip = final_clip.resize(newsize=(1920, 1080))
+        final_clip.write_videofile("Final Vids/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
         
 
 def main():
