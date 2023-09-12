@@ -7,5 +7,6 @@ pip install openpyxl
 pip install moviepy
 
 brew install ffmpeg
+brew install imagemagick
 
 open with VLC

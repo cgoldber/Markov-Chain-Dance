@@ -1,13 +1,10 @@
-import cv2
 import numpy as np
-import glob
-from moviepy.editor import VideoFileClip, clips_array
+from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, concatenate_videoclips, clips_array
 import pandas as pd
 import datetime
-import os
 
 
-NUM_MOVES = 20
+NUM_MOVES = 10
 
 class RetrieveProbabilities:
     def __init__(self):
@@ -68,20 +65,37 @@ class MarkovDancer:
             current_move = next_move
 
         return dance
+    
+    def annotate(self, move, clip):
+        """Adds caption describing dance move to each clip.
+           Args:
+               move (string): current dance move
+               clip (VideoFileClip) : video clip to be captioned
+        """
+        cap = TextClip(move, fontsize=90, color='white')
+        cap = cap.set_pos(("center", 1700)).set_duration(clip.duration)
+        return CompositeVideoClip([clip, cap])
 
     def write_dance_video_file(self, dance):
         """Write out a collection of dance move images (i.e, a dance!) to a file.
            Args:
                dance (list): moves in the dance
         """
-        video_clips = [VideoFileClip('Move Videos/' + move + ".mov") for move in dance]
-        final_clip = clips_array([[clip] for clip in video_clips])
-        final_clip = final_clip.resize(newsize=(1920, 1080))
-        final_clip.write_videofile("Final Vids/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
+        captioned_clips = []
+
+        for move in dance:
+            video_clip = VideoFileClip('Move Videos/' + move + ".mov")
+            video_clip = video_clip.resize(newsize=(1080, 1920))
+            video_clip = video_clip.set_audio(None)
+            captioned_clip = self.annotate(move, video_clip)
+            captioned_clips.append(captioned_clip)
+
+        final_clip = concatenate_videoclips(captioned_clips)
+        final_clip.write_videofile("Examples/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
+ 
         
 
 def main():
-    #os.environ["IMAGEIO_FFMPEG_EXE"] = "FFMPEG Download/ffmpeg-6.0"
     prob_retriever = RetrieveProbabilities()
     transition_matrix = prob_retriever.retrieve_trans_mat()
     priors = prob_retriever.retrieve_priors()
