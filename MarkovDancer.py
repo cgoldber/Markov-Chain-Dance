@@ -4,7 +4,18 @@ import pandas as pd
 import datetime
 
 
-NUM_MOVES = 10
+class Communicator:
+    def __init__(self):
+        print("Hello, welcome to my Markov Dancer")
+    
+    def get_num_moves(self):
+        """Asks user to choose how many moves shall be included in the dance (5, 10 or 15).
+        """
+        num_moves = input("Would you like to incorporate 5, 10, or 15 dance moves into the choreography? ")
+        while num_moves != "5" and num_moves != "10" and num_moves != "15":
+            num_moves = input("Try again, this Markov Dancer only accepts 5, 10, or 15 moves: ")
+        return int(num_moves)
+
 
 class RetrieveProbabilities:
     def __init__(self):
@@ -13,12 +24,12 @@ class RetrieveProbabilities:
     def retrieve_trans_mat(self):
         """Reads excel sheet that records the probability that each dance move will come next preconditioned on the current dance move.
         """
-        return pd.read_excel("CC Dance.xlsx", sheet_name = "Normalized Matrix", index_col=0, header=0)
+        return pd.read_excel("Probability Table.xlsx", sheet_name = "Normalized Matrix", index_col=0, header=0)
         
     def retrieve_priors(self):
         """Reads excel sheet that records the probability that each dance move will come first in the sequence.
         """
-        return pd.read_excel("CC Dance.xlsx", sheet_name = "Normalized Prior", index_col=0, header=0)
+        return pd.read_excel("Probability Table.xlsx", sheet_name = "Normalized Prior", index_col=0, header=0)
 
 
 class MarkovDancer:
@@ -50,7 +61,7 @@ class MarkovDancer:
             for next_move in self.moves]
         )
 
-    def compose_dance(self, num_moves=5):
+    def compose_dance(self, num_moves):
         """Generates a sequence of notes.
            Args:
                 current_move (str): the dance move that is currently being displayed.
@@ -66,46 +77,98 @@ class MarkovDancer:
 
         return dance
     
-    def annotate(self, move, clip):
+
+class VideoGenerator():
+    def __init__(self, dance):
+        print("Generating video representation of dance...")
+        self.dance = dance
+
+    def loop_vid(self, clip, start_time, total_duration):
+        """Concatenate videos of the same dance move so that they loop until the video ends
+           Args:
+               clip (VideoFileClip): video clip to be captioned
+               start_time (float): time that the current move video should start looping
+               total_duration (float): total time of all the chosen dance moves
+        """
+        num_loops = int(total_duration // clip.duration) + 1
+        loop_clip = concatenate_videoclips([clip] * num_loops)
+        loop_clip = loop_clip.set_start(start_time)
+        return loop_clip
+    
+    def annotate(self, move, clip, start_time):
         """Adds caption describing dance move to each clip.
            Args:
                move (string): current dance move
-               clip (VideoFileClip) : video clip to be captioned
+               clip (VideoFileClip): video clip to be captioned
         """
         cap = TextClip(move, fontsize=90, color='white')
-        cap = cap.set_pos(("center", 1700)).set_duration(clip.duration)
+        cap = cap.set_position(("center", 1700))
+        cap = cap.set_duration(clip.duration).set_start(start_time)
         return CompositeVideoClip([clip, cap])
+    
+    def edit_clips(self, clips, total_duration):
+        """Processes each clip to make them visually appealing
+           Args:
+               dance (list): current dance move
+               clips (list): video clip to be captioned
+               total_duration (int): sum of individual video clip durations
+        """
+        start_time = 0
+        edited_clips = []
+        for move, clip in zip(self.dance, clips):
+            clip = clip.set_audio(None).resize(newsize=(1080, 1920)) #adjust clip size and volume
+            #loop clip so that once played, it continues until video terminates
+            loop_clip = self.loop_vid(clip, start_time, total_duration)
+            captioned_clip = self.annotate(move, loop_clip, start_time) #caption clip
 
-    def write_dance_video_file(self, dance):
-        """Write out a collection of dance move images (i.e, a dance!) to a file.
+            edited_clips.append(captioned_clip)
+            start_time += clip.duration 
+        return edited_clips
+    
+    def align_array(self, clips):
+        """Aligns clip array so that there are 5 video clips per row
+           Args:
+               clips (list): video clips in dance
+        """
+        clip_array = []
+        for i in range(0, len(clips), 5):
+            row = clips[i:i+5]
+            clip_array.append(row)
+        return clips_array(clip_array, bg_color=(0, 0, 0))
+        
+    def write_dance_video_file(self):
+        """Write out a collection of dance moves (i.e, a dance!) to a file.
            Args:
                dance (list): moves in the dance
         """
-        captioned_clips = []
+        raw_vids = [VideoFileClip('Assets/' + move + ".mov") for move in self.dance]
+        total_duration = sum(clip.duration for clip in raw_vids)
 
-        for move in dance:
-            video_clip = VideoFileClip('Move Videos/' + move + ".mov")
-            video_clip = video_clip.resize(newsize=(1080, 1920))
-            video_clip = video_clip.set_audio(None)
-            captioned_clip = self.annotate(move, video_clip)
-            captioned_clips.append(captioned_clip)
+        #put clips into the right format
+        edited_clips = self.edit_clips(raw_vids, total_duration)
+        clip_arry = self.align_array(edited_clips)
+        clip_arry = clip_arry.set_end(total_duration) #cut off once final move finishes
 
-        final_clip = concatenate_videoclips(captioned_clips)
-        final_clip.write_videofile("Examples/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
+        #write to file
+        clip_arry.write_videofile("Examples/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
  
         
 
 def main():
+    myCommunicator = Communicator()
+    num_moves = myCommunicator.get_num_moves()
+
     prob_retriever = RetrieveProbabilities()
     transition_matrix = prob_retriever.retrieve_trans_mat()
     priors = prob_retriever.retrieve_priors()
 
     dance_maker = MarkovDancer(transition_matrix, priors)
-    new_dance = dance_maker.compose_dance(num_moves=NUM_MOVES)
-
+    new_dance = dance_maker.compose_dance(num_moves)
     print("Here's my latest dance:", new_dance)
-    print("Writing dance to file...")
-    dance_maker.write_dance_video_file(new_dance)
+
+    video_generator = VideoGenerator(new_dance)
+    video_generator.write_dance_video_file()
+
     print("Process completed!")
 
 
