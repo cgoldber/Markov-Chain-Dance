@@ -101,8 +101,8 @@ class VideoGenerator():
                move (string): current dance move
                clip (VideoFileClip): video clip to be captioned
         """
-        cap = TextClip(move, fontsize=90, color='white')
-        cap = cap.set_position(("center", 1700))
+        cap = TextClip(move, fontsize=70, color='white')
+        cap = cap.set_position(("center", 850))
         cap = cap.set_duration(clip.duration).set_start(start_time)
         return CompositeVideoClip([clip, cap])
     
@@ -116,7 +116,7 @@ class VideoGenerator():
         start_time = 0
         edited_clips = []
         for move, clip in zip(self.dance, clips):
-            clip = clip.set_audio(None).resize(newsize=(1080, 1920)) #adjust clip size and volume
+            clip = clip.set_audio(None).resize(newsize=(650, 960)) #adjust clip size and volume
             #loop clip so that once played, it continues until video terminates
             loop_clip = self.loop_vid(clip, start_time, total_duration)
             captioned_clip = self.annotate(move, loop_clip, start_time) #caption clip
@@ -148,11 +148,9 @@ class VideoGenerator():
         edited_clips = self.edit_clips(raw_vids, total_duration)
         clip_arry = self.align_array(edited_clips)
         clip_arry = clip_arry.set_end(total_duration) #cut off once final move finishes
-
         #write to file
-        clip_arry.write_videofile("Examples/" + str(datetime.datetime.now()) + ".mp4", codec="libx264", fps=24)
- 
-        
+        clip_arry.write_videofile("Examples/" + str(datetime.datetime.now()) + ".mp4", fps=24)
+  
 
 def main():
     myCommunicator = Communicator()

@@ -10,29 +10,20 @@ After the dance is created using Markov reasoning, various video clips of each m
 I would like to extend my sincerest gratitude to esteemed dance major at Bowdoin College, Dylan Richmond, for his invaluable participation in my project. I consulted Mr. Richmond for his expertise in the field of dance. For one thing, he provided me the names of 13 dance moves that he enjoys incorporating into his choreography. Mr. Richmond also used his experience choregraphing dances to generate the prior and transition probabilities. Finally, Mr. Richmond demonstrated each dance move for the individual video clips that make up the final sequence. Thanks Dylan!
 
 # Running the Code
-Installations:
+Installations -
+Python Packages: numpy, pandas, openpyxl, moviepy
+Other Packages: ffmpeg (https://ffmpeg.org/), imagemagick (https://imagemagick.org/index.php)
 
-pip install numpy
-pip install matplotlib
-pip install opencv-python
-pip install pandas
-pip install openpyxl
-pip install moviepy
-
-(for mac)
-brew install ffmpeg
-brew install imagemagick
-
-Where to Run:
+Where to Run - 
 Run the MarkovDance.py program. Be sure that the Examples and Assests folders, as well as the Probability Table excel sheet are in the same path as the python program.
 
-User Input:
+User Input - 
 The user will be prompted to input how many dance moves they would like to incorporate into the dance. They will continue to be prompted until they put one of the following values: 5, 10, or 15.
 
 
 # Project Development Reflection
 Q1. Describe how the system is personally meaningful to you.
-As a student at Bowdoin College, I am constantly inspired by the creative people around me. 
+As a student at Bowdoin College, I am constantly awed and inspired by the creative people around me. 
 
 Q2. Explain how working on it genuinely challenged you as a computer scientist.How did you push yourself outside of your comfort zone? Why was this an important challenge for you?
 
