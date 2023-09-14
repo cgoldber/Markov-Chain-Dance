@@ -1,13 +1,26 @@
 # Markov Chain Dancer
 
 ## Description
-The Markov Chain Dancer generates dance choreography based on probabilities and then displays the sequential moves in the dance. There are 13 possible dance moves included in this implementation. 
 
-The starting move is selected based on a prior probability distribution that indicates how likely it is for each move to be the starting move in a dance. The Markov Chain Dancer selects the next dance move by considering the probabilities of the next possible dance move given the current dance move. This process continues until the dance consists of a set number of moves (chosen by user).
+The Markov Chain Dancer is a project that generates dance choreography based on probabilities and displays the sequential moves in the dance. It includes 13 possible dance moves in its implementation.
 
-After the dance is created using Markov reasoning, various video clips of each move are concatenated together sequentially to display the progression of the dance.
+### How It Works
 
-I would like to extend my sincerest gratitude to esteemed dance major at Bowdoin College, Dylan Richmond, for his invaluable participation in my project. I consulted Mr. Richmond for his expertise in the field of dance. For one thing, he provided me the names of 13 dance moves that he enjoys incorporating into his choreography. Mr. Richmond also used his experience choregraphing dances to generate the prior and transition probabilities. Finally, Mr. Richmond demonstrated each dance move for the individual video clips that make up the final sequence. Thanks Dylan!
+- The starting dance move is selected using a prior probability distribution that indicates the likelihood of each move being the first in a dance.
+- Subsequent dance moves are determined by considering the probabilities of the next possible move given the current one.
+- This iterative process continues until the dance consists of a set number of moves, which can be chosen by the user.
+
+After applying Markov reasoning, the system concatenates various video clips of each move in sequential order to visually depict the progression of the dance.
+
+## Acknowledgments
+
+I extend my sincere gratitude to Dylan Richmond, a distinguished dance major at Bowdoin College, for his invaluable contributions to this project:
+
+- Providing the names of the 13 dance moves that he incorporates into his choreography.
+- Using his expertise to generate the prior and transition probabilities based on his choreographing experience.
+- Demonstrating each dance move for the individual video clips that compose the final sequence.
+
+Thank you, Dylan, for your invaluable collaboration!
 
 ## Running the Code
 ### Installations
