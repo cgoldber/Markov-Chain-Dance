@@ -37,13 +37,14 @@ class MarkovDancer:
         """Simulates a dancer that relies on a simple Markov chain to choose next dance move.
         Args:
                transition matrix (dict): the probabilities of transitioning from each move to every other move
+               priors (dict): the probabilities of starting with each move
         """
         self.transition_matrix = transition_matrix
         self.priors = priors
         self.moves = list(transition_matrix.columns)
     
     def get_first_move(self):
-        """Decides first move of sequence based on priors.
+        """Decides first move of sequence based on prior probabilities.
         """
         return np.random.choice(
             self.moves,
@@ -62,11 +63,9 @@ class MarkovDancer:
         )
 
     def compose_dance(self, num_moves):
-        """Generates a sequence of notes.
+        """Generates a sequence of notes based on transition probabilities.
            Args:
-                current_move (str): the dance move that is currently being displayed.
-
-                song_length (int): how many dance moves we should generate for the dance.
+                num_moves (int): how many dance moves are included in the dance.
         """
         current_move = self.get_first_move()
         dance = [current_move]
@@ -84,10 +83,10 @@ class VideoGenerator():
         self.dance = dance
 
     def loop_vid(self, clip, start_time, total_duration):
-        """Concatenate videos of the same dance move so that they loop until the video ends
+        """Concatenate videos of the same dance move so that it loops until the video ends.
            Args:
-               clip (VideoFileClip): video clip to be captioned
-               start_time (float): time that the current move video should start looping
+               clip (VideoFileClip): video clip to be looped
+               start_time (float): time that the current looped video should start displaying
                total_duration (float): total time of all the chosen dance moves
         """
         num_loops = int(total_duration // clip.duration) + 1
@@ -107,11 +106,11 @@ class VideoGenerator():
         return CompositeVideoClip([clip, cap])
     
     def edit_clips(self, clips, total_duration):
-        """Processes each clip to make them visually appealing
+        """Processes each clip to make them visually appealing.
            Args:
                dance (list): current dance move
                clips (list): video clip to be captioned
-               total_duration (int): sum of individual video clip durations
+               total_duration (float): sum of individual video clip durations
         """
         start_time = 0
         edited_clips = []
@@ -126,7 +125,7 @@ class VideoGenerator():
         return edited_clips
     
     def align_array(self, clips):
-        """Aligns clip array so that there are 5 video clips per row
+        """Aligns clip array so that there are 5 video clips per row.
            Args:
                clips (list): video clips in dance
         """
@@ -137,7 +136,7 @@ class VideoGenerator():
         return clips_array(clip_array, bg_color=(0, 0, 0))
         
     def write_dance_video_file(self):
-        """Write out a collection of dance moves (i.e, a dance!) to a file.
+        """Write out a collection of dance move clips to a file.
            Args:
                dance (list): moves in the dance
         """
