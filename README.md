@@ -1,4 +1,4 @@
-# Title : Markov Chain Dancer
+# Markov Chain Dancer
 
 # Description
 The Markov Chain Dancer generates dance choreography based on probabilities and then displays the sequential moves in the dance. There are 13 possible dance moves included in this implementation. 
