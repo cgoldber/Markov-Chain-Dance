@@ -22,7 +22,8 @@ class RetrieveProbabilities:
         print("Retrieving Transition and Prior Probabilities")
     
     def retrieve_trans_mat(self):
-        """Reads excel sheet that records the probability that each dance move will come next preconditioned on the current dance move.
+        """Reads excel sheet that records the probability that each dance move will come next 
+        preconditioned on the current dance move.
         """
         return pd.read_excel("Probability Table.xlsx", sheet_name = "Normalized Matrix", index_col=0, header=0)
         
@@ -99,6 +100,7 @@ class VideoGenerator():
            Args:
                move (string): current dance move
                clip (VideoFileClip): video clip to be captioned
+               start_time (float): indicates when the current clip should be displayed
         """
         cap = TextClip(move, fontsize=70, color='white')
         cap = cap.set_position(("center", 850))
@@ -108,7 +110,6 @@ class VideoGenerator():
     def edit_clips(self, clips, total_duration):
         """Processes each clip to make them visually appealing.
            Args:
-               dance (list): current dance move
                clips (list): video clip to be captioned
                total_duration (float): sum of individual video clip durations
         """
@@ -137,8 +138,6 @@ class VideoGenerator():
         
     def write_dance_video_file(self):
         """Write out a collection of dance move clips to a file.
-           Args:
-               dance (list): moves in the dance
         """
         raw_vids = [VideoFileClip('Assets/' + move + ".mov") for move in self.dance]
         total_duration = sum(clip.duration for clip in raw_vids)
@@ -152,17 +151,21 @@ class VideoGenerator():
   
 
 def main():
+    #get user input
     myCommunicator = Communicator()
     num_moves = myCommunicator.get_num_moves()
 
+    #get probability info
     prob_retriever = RetrieveProbabilities()
     transition_matrix = prob_retriever.retrieve_trans_mat()
     priors = prob_retriever.retrieve_priors()
 
+    #make dance
     dance_maker = MarkovDancer(transition_matrix, priors)
     new_dance = dance_maker.compose_dance(num_moves)
     print("Here's my latest dance:", new_dance)
 
+    #make video representation of dance
     video_generator = VideoGenerator(new_dance)
     video_generator.write_dance_video_file()
 
